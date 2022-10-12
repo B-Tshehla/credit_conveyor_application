@@ -14,18 +14,21 @@ import java.util.List;
 import java.util.regex.*;
 
 @Service
-public class ConveyorService {
+public class OffersConveyorService {
 
     @Autowired
     private LoanOfferDTO loanOffer;
 
-    public List<LoanOfferDTO> loanOfferDTOList (LoanApplicationRequestDTO loanApplicationRequestDTO){
+    public List<LoanOfferDTO> getLoanOfferDTOList(LoanApplicationRequestDTO loanApplicationRequestDTO,Long applicationId){
         List<LoanOfferDTO> offersList = new ArrayList<>();
 
-        offersList.add(getLoanOffer(loanApplicationRequestDTO,loanOffer,true,true));
-        offersList.add(getLoanOffer(loanApplicationRequestDTO,loanOffer,true,false));
-        offersList.add(getLoanOffer(loanApplicationRequestDTO,loanOffer,false,true));
-        offersList.add(getLoanOffer(loanApplicationRequestDTO,loanOffer,false,false));
+        if(isPreScoring(loanApplicationRequestDTO)) {
+            loanOffer.setApplicationId(applicationId);
+            offersList.add(getLoanOffer(loanApplicationRequestDTO, loanOffer, false, false));
+            offersList.add(getLoanOffer(loanApplicationRequestDTO, loanOffer, true, false));
+            offersList.add(getLoanOffer(loanApplicationRequestDTO, loanOffer, false, true));
+            offersList.add(getLoanOffer(loanApplicationRequestDTO, loanOffer, true, true));
+        }
 
         return offersList;
     }
@@ -38,9 +41,13 @@ public class ConveyorService {
         loanOffer.setIsSalaryClient(isSalaryClient);
         loanOffer.setRequestedAmount(loanApplicationRequestDTO.getAmount());
         loanOffer.setTerm(loanApplicationRequestDTO.getTerm());
+        loanOffer.setTotalAmount(BigDecimal.valueOf(0));
+        loanOffer.setRate(BigDecimal.valueOf(0));
+        loanOffer.setMonthlyPayment(BigDecimal.valueOf(0));
+
         return loanOffer;
     }
-      private boolean isScoring(LoanApplicationRequestDTO loanApplication){
+      private boolean isPreScoring(LoanApplicationRequestDTO loanApplication){
         return isAmount(loanApplication.getAmount()) &&
                 isOlder(loanApplication.getBirthdate())&&
                 isLetters(loanApplication.getFirstName())&&
@@ -72,18 +79,4 @@ public class ConveyorService {
     private boolean isAmount(BigDecimal amount){
         return amount.compareTo(BigDecimal.valueOf(10000)) > 0;
     }
-
-    public CreditDTO getCreditDTO(ScoringDataDTO scoringDataDTO){
-
-        return null;
-    }
-
-    private BigDecimal getEmploymentRate(EmploymentDTO employmentDTO){
-        BigDecimal rate = BigDecimal.valueOf(0);
-
-
-
-        return rate;
-    }
-
 }
