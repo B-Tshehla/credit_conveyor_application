@@ -17,10 +17,10 @@
 
 
   <groupId>com.enfint</groupId>
-  <artifactId>credit_conveyor_application</artifactId>
+  <artifactId>credit-conveyor-application</artifactId>
   <version>1.0-SNAPSHOT</version>
 
-  <name>credit_conveyor_application</name>
+  <name>credit-conveyor-application</name>
 
   <url>http://www.credit-conveyor.com</url>
 
