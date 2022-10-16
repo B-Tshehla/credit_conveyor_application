@@ -17,9 +17,14 @@ import java.util.regex.*;
 public class OffersConveyorService {
 
     @Autowired
-    private LoanOfferDTO loanOffer;
+    private final LoanOfferDTO loanOffer;
 
-    public List<LoanOfferDTO> getLoanOfferDTOList(LoanApplicationRequestDTO loanApplicationRequestDTO,Long applicationId){
+    @Autowired
+    public OffersConveyorService(LoanOfferDTO loanOffer) {
+        this.loanOffer = loanOffer;
+    }
+
+    public List<LoanOfferDTO> getLoanOfferDTOList(LoanApplicationRequestDTO loanApplicationRequestDTO, Long applicationId){
         List<LoanOfferDTO> offersList = new ArrayList<>();
 
         if(isPreScoring(loanApplicationRequestDTO)) {
@@ -28,6 +33,9 @@ public class OffersConveyorService {
             offersList.add(getLoanOffer(loanApplicationRequestDTO, loanOffer, true, false));
             offersList.add(getLoanOffer(loanApplicationRequestDTO, loanOffer, false, true));
             offersList.add(getLoanOffer(loanApplicationRequestDTO, loanOffer, true, true));
+        }
+        else {
+            throw new RuntimeException("PreScoring did not pass");
         }
 
         return offersList;
@@ -48,6 +56,7 @@ public class OffersConveyorService {
         return loanOffer;
     }
       private boolean isPreScoring(LoanApplicationRequestDTO loanApplication){
+
         return isAmount(loanApplication.getAmount()) &&
                 isOlder(loanApplication.getBirthdate())&&
                 isLetters(loanApplication.getFirstName())&&
