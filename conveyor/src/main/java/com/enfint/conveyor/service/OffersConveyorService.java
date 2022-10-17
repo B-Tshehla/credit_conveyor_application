@@ -2,7 +2,7 @@ package com.enfint.conveyor.service;
 
 
 import com.enfint.conveyor.dto.*;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 
@@ -14,15 +14,10 @@ import java.util.List;
 import java.util.regex.*;
 
 @Service
+@RequiredArgsConstructor
 public class OffersConveyorService {
 
-    @Autowired
     private final LoanOfferDTO loanOffer;
-
-    @Autowired
-    public OffersConveyorService(LoanOfferDTO loanOffer) {
-        this.loanOffer = loanOffer;
-    }
 
     public List<LoanOfferDTO> getLoanOfferDTOList(LoanApplicationRequestDTO loanApplicationRequestDTO, Long applicationId){
         List<LoanOfferDTO> offersList = new ArrayList<>();

@@ -5,7 +5,8 @@ import com.enfint.conveyor.dto.ScoringDataDTO;
 import com.enfint.conveyor.enumModel.EmploymentStatus;
 import com.enfint.conveyor.enumModel.MaritalStatus;
 import com.enfint.conveyor.enumModel.Position;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.NoArgsConstructor;
+import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -19,10 +20,9 @@ import static com.enfint.conveyor.enumModel.Position.MID_MANAGER;
 import static com.enfint.conveyor.enumModel.Position.TOP_MANAGER;
 import static java.math.BigDecimal.valueOf;
 
+@Service
+@NoArgsConstructor
 public class CalculateFullRatingService {
-    @Autowired
-    CalculateFullRatingService(){}
-
     public BigDecimal getFullRate(ScoringDataDTO data){
 
         BigDecimal fullRating = valueOf(0);
@@ -44,11 +44,11 @@ public class CalculateFullRatingService {
             fullRating = fullRating.add(BigDecimal.valueOf(1));
         } else if(employment.getWorkExperienceCurrent() < 3 && employment.getWorkExperienceTotal() < 12){
             throw new RuntimeException("Refusal");
-        }else {
+        }else if(isNotEmployed(data.getEmployment())){
             throw new RuntimeException("Refusal");
+        }else if(isNotValidAge(data.getBirthdate())){
+        throw new RuntimeException("Refusal");
         }
-
-
         return fullRating;
     }
 
@@ -111,5 +111,13 @@ public class CalculateFullRatingService {
         BigDecimal salary = data.getEmployment().getSalary();
 
         return salary.multiply(valueOf(20)).compareTo(amount) > 0;
+    }
+    private boolean isNotValidAge(LocalDate birthdate){
+        return Period.between(birthdate, LocalDate.now()).getYears() > 20 ||
+                Period.between(birthdate, LocalDate.now()).getYears() < 60;
+    }
+
+    private boolean isNotEmployed(EmploymentDTO employmentDTO){
+        return employmentDTO.getEmploymentStatus() == UNEMPLOYED;
     }
 }
