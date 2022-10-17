@@ -21,6 +21,7 @@ public class ConveyorController {
     private final RestTemplate restTemplate;
     private final OffersConveyorService offersConveyorService;
     private final ScoringConveyorService scoringConveyorService;
+    ScoringDataDTO scoringDataDTO;
 
     @RequestMapping("/offers/{applicationId}")
     public List<LoanOfferDTO> getLoanOffers(@PathVariable("applicationId") Long applicationId){
@@ -32,10 +33,10 @@ public class ConveyorController {
 
     @RequestMapping("/calculation")
     public CreditDTO getCreditDTO(){
-        ScoringDataDTO scoringDataDTO = restTemplate
+         scoringDataDTO = restTemplate
                 .getForObject("http://localhost:8082/deal/calculation", ScoringDataDTO.class);
 
-        return scoringConveyorService.getCreditDTO();
+        return scoringConveyorService.getCreditDTO(scoringDataDTO);
     }
 
 

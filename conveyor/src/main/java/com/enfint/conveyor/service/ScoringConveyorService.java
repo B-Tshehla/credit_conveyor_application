@@ -23,7 +23,7 @@ public class ScoringConveyorService {
 
 
 
-    public CreditDTO getCreditDTO(){
+    public CreditDTO getCreditDTO(ScoringDataDTO scoringDataDTO){
 
         creditDTO.setRate(fullRatingService.getFullRate(scoringDataDTO));
         creditDTO.setAmount(scoringDataDTO.getAmount());
