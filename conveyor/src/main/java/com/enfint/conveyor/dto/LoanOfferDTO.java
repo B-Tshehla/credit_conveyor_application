@@ -4,13 +4,15 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 
 import lombok.NoArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
 
 import java.math.BigDecimal;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Component
 public class LoanOfferDTO {
     private Long applicationId;
     private BigDecimal requestedAmount;
@@ -20,5 +22,6 @@ public class LoanOfferDTO {
     private BigDecimal rate;
     private Boolean isInsuranceEnabled;
     private Boolean isSalaryClient;
+
 
 }

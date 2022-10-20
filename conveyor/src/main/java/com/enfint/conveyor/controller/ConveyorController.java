@@ -7,35 +7,36 @@ import com.enfint.conveyor.dto.ScoringDataDTO;
 import com.enfint.conveyor.service.OffersConveyorService;
 import com.enfint.conveyor.service.ScoringConveyorService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.client.RestTemplate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.web.bind.annotation.*;
+
 
 import java.util.List;
 
 @RestController
-@RequestMapping("conveyor")
+@RequestMapping("/conveyor")
 @RequiredArgsConstructor
 public class ConveyorController {
-    private final RestTemplate restTemplate;
     private final OffersConveyorService offersConveyorService;
     private final ScoringConveyorService scoringConveyorService;
-    ScoringDataDTO scoringDataDTO;
 
-    @RequestMapping("/offers/{applicationId}")
-    public List<LoanOfferDTO> getLoanOffers(@PathVariable("applicationId") Long applicationId){
-        LoanApplicationRequestDTO loanApplicationRequestDTO = restTemplate
-        .getForObject("http://localhost:8082/deal/application" + applicationId,
-                LoanApplicationRequestDTO.class);
-        return offersConveyorService.getLoanOfferDTOList(loanApplicationRequestDTO,applicationId);
+    private final Logger log = LoggerFactory.getLogger(ConveyorController.class);
+
+    @PostMapping("/offers/{applicationId}")
+    public List<LoanOfferDTO> getLoanOffers(@PathVariable("applicationId") Long applicationId,
+                                            @RequestBody LoanApplicationRequestDTO loanApplicationRequest){
+        log.info("************ Getting Loan offers ***************");
+        log.info("Get loan offers for Application {} with application request {}",applicationId,
+                loanApplicationRequest);
+
+        return offersConveyorService.getLoanOfferDTOList(loanApplicationRequest,applicationId);
     }
 
-    @RequestMapping("/calculation")
-    public CreditDTO getCreditDTO(){
-         scoringDataDTO = restTemplate
-                .getForObject("http://localhost:8082/deal/calculation", ScoringDataDTO.class);
-
+    @PostMapping("/calculation")
+    public CreditDTO getCreditDTO(@RequestBody ScoringDataDTO scoringDataDTO){
+        log.info("************ Getting Credit ***************");
+        log.info("Validate date and calculate credit {}", scoringDataDTO);
         return scoringConveyorService.getCreditDTO(scoringDataDTO);
     }
 

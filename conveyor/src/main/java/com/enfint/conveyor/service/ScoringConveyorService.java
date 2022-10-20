@@ -3,44 +3,48 @@ package com.enfint.conveyor.service;
 import com.enfint.conveyor.dto.CreditDTO;
 import com.enfint.conveyor.dto.PaymentScheduleElement;
 import com.enfint.conveyor.dto.ScoringDataDTO;
-import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.List;
-
 @Service
-@RequiredArgsConstructor
 public class ScoringConveyorService {
 
     private final CalculateFullRatingService fullRatingService;
     private final CreditDTO creditDTO;
-    private final ScoringDataDTO scoringDataDTO;
-    private final PaymentScheduleElement paymentScheduleElement;
+    Logger log = LoggerFactory.getLogger(OffersConveyorService.class);
 
-
+    public ScoringConveyorService(CalculateFullRatingService fullRatingService,
+                                  CreditDTO creditDTO) {
+        this.fullRatingService = fullRatingService;
+        this.creditDTO = creditDTO;
+    }
 
     public CreditDTO getCreditDTO(ScoringDataDTO scoringDataDTO){
-
+        log.info("************ Generating Credit ***************");
         creditDTO.setRate(fullRatingService.getFullRate(scoringDataDTO));
-        creditDTO.setAmount(scoringDataDTO.getAmount());
+        creditDTO.setAmount(scoringDataDTO.getAmount().setScale(2,RoundingMode.CEILING));
         creditDTO.setTerm(scoringDataDTO.getTerm());
         creditDTO.setIsInsuranceEnabled(scoringDataDTO.getIsInsuranceEnabled());
         creditDTO.setIsSalaryClient(scoringDataDTO.getIsSalaryClient());
-        creditDTO.setMonthlyPayment(getMonthlyPayment());
-        creditDTO.setPsk(getMonthlyPayment().multiply(BigDecimal.valueOf(scoringDataDTO.getTerm())));
+        creditDTO.setMonthlyPayment(getMonthlyPayment(scoringDataDTO));
+        creditDTO.setPsk(getMonthlyPayment(scoringDataDTO).multiply(BigDecimal.valueOf(scoringDataDTO.getTerm())));
         creditDTO.setPaymentSchedule(getPaymentSchedule());
 
         return creditDTO;
     }
 
-    private BigDecimal getMonthlyPayment(){
-        double rate = fullRatingService.getFullRate(scoringDataDTO).doubleValue();;
+    private BigDecimal getMonthlyPayment(ScoringDataDTO scoringDataDTO){
+        log.info("************ Calculating Monthly Payment ***************");
+        double rate = fullRatingService.getFullRate(scoringDataDTO).doubleValue();
         double term = scoringDataDTO.getTerm();
-        double amount =  scoringDataDTO.getAmount().doubleValue();;
+        double amount =  scoringDataDTO.getAmount().doubleValue();
         double numerator;
         double denominator;
         double monthlyPayment;
@@ -49,31 +53,48 @@ public class ScoringConveyorService {
         numerator = amount*rate*Math.pow((1 + rate),term);
         denominator = Math.pow((1+rate),term) -1;
         monthlyPayment = numerator/denominator;
-
-        return BigDecimal.valueOf(monthlyPayment);
+        log.info("Calculated monthly payment{}",monthlyPayment);
+        return BigDecimal.valueOf(monthlyPayment).setScale(2,RoundingMode.CEILING);
     }
 
     private List<PaymentScheduleElement> getPaymentSchedule(){
+        log.info("************ Generating Payment Schedule ***************");
         LocalDate currentDate =LocalDate.now();
         Integer term = creditDTO.getTerm();
-        BigDecimal totalAmount = creditDTO.getPsk();
-        BigDecimal monthlyPayment = creditDTO.getMonthlyPayment();
-        BigDecimal loanAmount = creditDTO.getAmount();
-        BigDecimal interestPayment = totalAmount.subtract(loanAmount).divide(BigDecimal.valueOf(term));
+        BigDecimal totalLoanAmount = creditDTO.getPsk();
+        BigDecimal debtPayment = creditDTO.getMonthlyPayment();
+        BigDecimal loanedAmount = creditDTO.getAmount();
+        BigDecimal interestPaymentBase = totalLoanAmount.subtract(loanedAmount)
+                .divide(BigDecimal.valueOf(term),RoundingMode.HALF_UP);
+
+
+        BigDecimal interestPayment = BigDecimal.ZERO.setScale(2,RoundingMode.CEILING);
+        BigDecimal totalPayment = BigDecimal.ZERO.setScale(2,RoundingMode.CEILING);
+        BigDecimal remainingDebt = totalLoanAmount;
+
         List<PaymentScheduleElement> paymentScheduleList = new ArrayList<>();
+        paymentScheduleList.add(new PaymentScheduleElement(
+           0,
+                currentDate,
+                totalPayment,
+                interestPayment,
+                BigDecimal.ZERO.setScale(2,RoundingMode.CEILING),
+                remainingDebt)
+        );
+        currentDate = currentDate.plusMonths(1);
+        for(int x = 1; x <= term ;x++){
 
-        for(int x = 0; x < scoringDataDTO.getTerm();x++){
             currentDate = currentDate.with(TemporalAdjusters.firstDayOfNextMonth());
+            totalPayment = totalPayment.add(debtPayment);
+            remainingDebt = remainingDebt.subtract(debtPayment);
+            interestPayment = interestPayment.add(interestPaymentBase);
 
-            paymentScheduleElement.setNumber(x);
-            paymentScheduleElement.setDate(currentDate);
-            paymentScheduleElement.setTotalPayment(totalAmount);
-            paymentScheduleElement.setInterestPayment(interestPayment);
-            paymentScheduleElement.setDebtPayment(monthlyPayment);
-            paymentScheduleElement.setRemainingDebt(totalAmount.subtract(monthlyPayment));
-
-            paymentScheduleList.add(paymentScheduleElement);
-            interestPayment = interestPayment.add(interestPayment);
+            paymentScheduleList.add(new PaymentScheduleElement(x,
+                    currentDate,
+                    totalPayment.setScale(2, RoundingMode.CEILING),
+                    interestPayment.setScale(2,RoundingMode.CEILING),
+                    debtPayment.setScale(2, RoundingMode.CEILING),
+                    remainingDebt.setScale(2, RoundingMode.CEILING)));
         }
         return paymentScheduleList;
 
