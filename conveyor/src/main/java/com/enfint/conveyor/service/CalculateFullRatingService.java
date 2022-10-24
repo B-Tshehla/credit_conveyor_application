@@ -5,6 +5,7 @@ import com.enfint.conveyor.dto.ScoringDataDTO;
 import com.enfint.conveyor.enumModel.EmploymentStatus;
 import com.enfint.conveyor.enumModel.MaritalStatus;
 import com.enfint.conveyor.enumModel.Position;
+import com.enfint.conveyor.exception.RefusalException;
 import lombok.NoArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,23 +52,23 @@ public class CalculateFullRatingService {
         }
         if (isValidAmount(data)){
             log.info("Invalid Amount loan refused");
-            //throw new RuntimeException("Refusal");
+            throw new RefusalException("Requested Amount is more than 20 times your salary, loan refused");
         }
         if (data.getDependentAmount() > 1) {
             fullRating = fullRating.add(BigDecimal.valueOf(1));
             log.info("Male rating {}",fullRating);
         }
-        if(employment.getWorkExperienceCurrent() < 3 && employment.getWorkExperienceTotal() < 12){
+        if(employment.getWorkExperienceCurrent() < 3 || employment.getWorkExperienceTotal() < 12){
             log.info("Invalid Work Experience loan refused");
-            //throw new RuntimeException("Refusal");
+            throw new RefusalException("Invalid Work Experience loan refused");
         }
         if(isNotEmployed(data.getEmployment())){
             log.info("Refused Client is Unemployed");
-            //throw new RuntimeException("Refusal");
+            throw new RefusalException("Refused Client is Unemployed");
         }
         if(isNotValidAge(data.getBirthdate())){
             log.info("Refused client does not meet the age bracket");
-            //throw new RuntimeException("Refusal");
+            throw new RefusalException("Refused client does not meet the age bracket");
         }
 
         log.info("Full Rating {} ", fullRating);
@@ -150,8 +151,9 @@ public class CalculateFullRatingService {
         return Period.between(birthdate, LocalDate.now()).getYears() < 20 ||
                 Period.between(birthdate, LocalDate.now()).getYears() > 60;
     }
-
     private boolean isNotEmployed(EmploymentDTO employmentDTO){
         return employmentDTO.getEmploymentStatus() == UNEMPLOYED;
     }
+
+
 }

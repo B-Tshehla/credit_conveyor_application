@@ -23,14 +23,12 @@ public class ConveyorController {
 
     private final Logger log = LoggerFactory.getLogger(ConveyorController.class);
 
-    @PostMapping("/offers/{applicationId}")
-    public List<LoanOfferDTO> getLoanOffers(@PathVariable("applicationId") Long applicationId,
-                                            @RequestBody LoanApplicationRequestDTO loanApplicationRequest){
+    @PostMapping("/offers")
+    public List<LoanOfferDTO> getLoanOffers(@RequestBody LoanApplicationRequestDTO loanApplicationRequest){
         log.info("************ Getting Loan offers ***************");
-        log.info("Get loan offers for Application {} with application request {}",applicationId,
-                loanApplicationRequest);
+        log.info("Get loan offers with application request {}", loanApplicationRequest);
 
-        return offersConveyorService.getLoanOfferDTOList(loanApplicationRequest,applicationId);
+        return offersConveyorService.getLoanOfferDTOList(loanApplicationRequest);
     }
 
     @PostMapping("/calculation")

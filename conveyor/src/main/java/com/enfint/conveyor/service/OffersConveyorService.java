@@ -2,7 +2,7 @@ package com.enfint.conveyor.service;
 
 import com.enfint.conveyor.dto.LoanApplicationRequestDTO;
 import com.enfint.conveyor.dto.LoanOfferDTO;
-import lombok.RequiredArgsConstructor;
+import com.enfint.conveyor.exception.RefusalException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -15,29 +15,32 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
 @Service
-@RequiredArgsConstructor
+
 public class OffersConveyorService {
     Logger log = LoggerFactory.getLogger(OffersConveyorService.class);
+    OfferCalculationService offerCalculate;
 
-    public List<LoanOfferDTO> getLoanOfferDTOList(LoanApplicationRequestDTO loanApplicationRequestDTO, Long applicationId){
+    public OffersConveyorService(OfferCalculationService offerCalculate) {
+        this.offerCalculate = offerCalculate;
+    }
+
+    public List<LoanOfferDTO> getLoanOfferDTOList(LoanApplicationRequestDTO loanApplicationRequestDTO){
         List<LoanOfferDTO> offersList = new ArrayList<>();
             log.info("************ Checking if Pre-scoring passed ***************");
-            if(isPreScoring(loanApplicationRequestDTO)) {
-
+            if (loanApplicationRequestDTO == null){
+                throw new RefusalException("Pre-scoring failed loan application is null");
+            }
+            isPreScoring(loanApplicationRequestDTO);
                 offersList.add(getLoanOffer(loanApplicationRequestDTO,
                         new LoanOfferDTO(), false, false));
                 offersList.add(getLoanOffer(loanApplicationRequestDTO,
-                        new LoanOfferDTO(), true, false));
-                offersList.add(getLoanOffer(loanApplicationRequestDTO,
                         new LoanOfferDTO(), false, true));
                 offersList.add(getLoanOffer(loanApplicationRequestDTO,
+                        new LoanOfferDTO(), true, false));
+                offersList.add(getLoanOffer(loanApplicationRequestDTO,
                         new LoanOfferDTO(), true, true));
-                log.info("Pre-scoring passed {}",offersList);
 
-            } else {
-                //throw new RuntimeException("PreScoring did not pass");
-                log.info("Pre-scoring fail");
-            }
+                log.info("Pre-scoring passed {}",offersList);
 
         return offersList;
     }
@@ -46,51 +49,112 @@ public class OffersConveyorService {
                                       Boolean isInsuranceEnable,
                                       Boolean isSalaryClient){
         log.info("************ Generating Loan Offer ***************");
+        BigDecimal requestedAmount = loanApplicationRequestDTO.getAmount();
+        Integer term = loanApplicationRequestDTO.getTerm();
+        BigDecimal rate = offerCalculate.getRate(isInsuranceEnable,isSalaryClient);
+        BigDecimal monthlyPayment =
+                offerCalculate.getMonthlyPayment(rate.doubleValue(),
+                        requestedAmount.doubleValue(),term);
+        BigDecimal totalAmount = offerCalculate.getFullAmount(monthlyPayment,term);
+
         loanOffer.setIsInsuranceEnabled(isInsuranceEnable);
         loanOffer.setIsSalaryClient(isSalaryClient);
-        loanOffer.setRequestedAmount(loanApplicationRequestDTO.getAmount());
-        loanOffer.setTerm(loanApplicationRequestDTO.getTerm());
-        loanOffer.setTotalAmount(BigDecimal.ZERO);
-        loanOffer.setRate(BigDecimal.ZERO);
-        loanOffer.setMonthlyPayment(BigDecimal.ZERO);
+        loanOffer.setRequestedAmount(requestedAmount);
+        loanOffer.setTerm(term);
+        loanOffer.setTotalAmount(totalAmount);
+        loanOffer.setRate(rate);
+        loanOffer.setMonthlyPayment(monthlyPayment);
         log.info("creating loan offer {}",loanOffer);
         return loanOffer;
     }
-      public boolean isPreScoring(LoanApplicationRequestDTO loanApplication){
+      private void isPreScoring(LoanApplicationRequestDTO loanApplication){
           log.info("************ Validating data ***************");
-        return  isAmount(loanApplication.getAmount()) &&
-                isOlder(loanApplication.getBirthdate())&&
-                isLetters(loanApplication.getFirstName())&&
-                isLetters(loanApplication.getLastName())&&
-                isLetters(loanApplication.getMiddleName())&&
-                isEmail(loanApplication.getEmail())&&
-                isLoanTerm(loanApplication.getTerm())&&
-                isPassport(loanApplication.getPassportSeries(),loanApplication.getPassportNumber());
+          validateAmount(loanApplication.getAmount());
+          validateAge(loanApplication.getBirthdate());
+          validateName(loanApplication.getFirstName());
+          validateName(loanApplication.getLastName());
+          blankMiddleNameCheck(loanApplication.getMiddleName());
+          validateEmail(loanApplication.getEmail());
+          validateLoanTerm(loanApplication.getTerm());
+          passportNumberValidation(loanApplication.getPassportNumber());
+          validatePassportSeries(loanApplication.getPassportSeries());
     }
-    private boolean isLetters(String name){
+    private void validateName(String name){
         log.info("Validating name...{}",name);
-        return Pattern.matches("[a-zA-Z]{2,30}", name);
+        if (name == null || name.isEmpty()){
+            throw new RefusalException("Pre-scoring failed name is null");
+        } else if (Pattern.matches("[a-zA-Z]{2,30}", name)) {
+         log.info("Valid name passed!");
+        }else {
+            throw new RefusalException("Pre-scoring failed name is not valid");
+        }
     }
-    private boolean isEmail(String email){
+    private void blankMiddleNameCheck(String name){
+        if(name == null || name.isEmpty()) {
+            log.info("MiddleName is Empty...");
+        }else
+        {
+             validateName(name);
+        }
+    }
+    private void validateEmail(String email){
         log.info("Validating email...");
-        return Pattern.matches("[\\w\\.]{2,50}@[\\w\\.]{2,20}",email);
+        if(email == null || email.isEmpty()){
+            throw new RefusalException("Pre-scoring failed email is empty");
+        } else if (Pattern.matches("[\\w\\.]{2,50}@[\\w\\.]{2,20}",email)) {
+            log.info("Valid email passed!");
+        }else {
+            throw new RefusalException("Pre-scoring failed email is invalid");
+        }
     }
-    private boolean isLoanTerm(Integer term){
+    private void validateLoanTerm(Integer term){
         log.info("Validating term...");
-        return term>6;
+        if(term == null){
+            throw new RefusalException("Pre-scoring failed term is null");
+        }else if (term>6) {
+            log.info("Term is more than 6 months passed!");
+        }else {
+            throw new RefusalException("Pre-scoring failed term is less than 6 months");
+        }
     }
-    private boolean isPassport(String passportSeries, String passportNumber){
+    private void validatePassportSeries(String passportSeries){
         log.info("Validating passport series...");
+        if (passportSeries == null || passportSeries.isEmpty()){
+            throw new RefusalException("Pre-scoring failed passport series is null");
+        } else if (Pattern.matches("[\\d]{4}", passportSeries)) {
+            log.info("Valid passport series passed!");
+        }else {
+            throw new RefusalException("Pre-scoring failed invalid passport series");
+        }
+    }
+    private void passportNumberValidation (String passportNumber){
         log.info("Validating passport Number...");
-        return Pattern.matches("[\\d]{4}", passportSeries) &&
-                Pattern.matches("[\\d]{6}", passportNumber);
+        if (passportNumber == null || passportNumber.isEmpty()){
+            throw new RefusalException("Pre-scoring failed passport number is null");
+        } else if (Pattern.matches("[\\d]{6}", passportNumber)) {
+            log.info("Valid passport number passed!");
+        }else {
+            throw new RefusalException("Pre-scoring failed passport number is invalid");
+        }
     }
-    private boolean isOlder(LocalDate dob){
+    private void validateAge(LocalDate dob){
         log.info("Validating age...");
-        return Period.between(dob,LocalDate.now()).getYears() >= 18;
+        if(dob == null){
+            throw new RefusalException("Pre-scoring failed age is null");
+        } else if (Period.between(dob,LocalDate.now()).getYears() >= 18) {
+            log.info("Valid age passed!");
+        }else {
+            throw new RefusalException("Pre-scoring failed client younger than 18");
+        }
     }
-    private boolean isAmount(BigDecimal amount){
+    private void validateAmount(BigDecimal amount){
         log.info("Validating loan Amount...");
-        return amount.compareTo(BigDecimal.valueOf(10_000)) >= 0;
+        if (amount == null){
+            throw new RefusalException("Pre-scoring failed amount is null");
+        }else if (amount.compareTo(BigDecimal.valueOf(10_000)) >= 0){
+            log.info("Valid amount passed!");
+        }else{
+            throw new RefusalException("Pre-scoring failed amount is less than 10,000.00");
+        }
     }
 }
