@@ -21,12 +21,13 @@ import static com.enfint.conveyor.enumModel.EmploymentStatus.*;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.*;
-@RequiredArgsConstructor
+
 class CalculateFullRatingServiceTest {
 
     CalculateFullRatingService underTest;
     ScoringDataDTO scoringData;
     EmploymentDTO employment;
+
     @BeforeEach
     void setUp() {
         underTest = new CalculateFullRatingService();
@@ -45,10 +46,10 @@ class CalculateFullRatingServiceTest {
                 "Tshehla",
                 "Tumi",
                 Gender.MALE,
-                LocalDate.of(1999,1,21),
+                LocalDate.of(1999, 1, 21),
                 "1234",
                 "123456",
-                LocalDate.of(2010,10,24),
+                LocalDate.of(2010, 10, 24),
                 "Johannesburg",
                 MaritalStatus.SINGLE,
                 1,
@@ -60,82 +61,87 @@ class CalculateFullRatingServiceTest {
 
 
     @Test
-    void shouldCalculateFullRate(){
+    void shouldCalculateFullRate() {
         BigDecimal expect = BigDecimal.valueOf(3);
         assertThat(underTest.getFullRate(scoringData)).isEqualTo(expect);
     }
 
     @Test
-    void shouldThrowARefusalExceptionWhenUnEmployed(){
+    void shouldThrowARefusalExceptionWhenUnEmployed() {
         employment.setEmploymentStatus(UNEMPLOYED);
-        assertThatThrownBy(()->{
+        assertThatThrownBy(() -> {
             underTest.getFullRate(scoringData);
         }).isInstanceOf(RefusalException.class)
                 .hasMessageContaining("Refused Client is Unemployed");
     }
+
     @Test
-    void shouldThrowARefusalExceptionWhenAmountIs20TimesTheSalary(){
+    void shouldThrowARefusalExceptionWhenAmountIs20TimesTheSalary() {
         scoringData.setAmount(BigDecimal.valueOf(100_000));
         employment.setSalary(BigDecimal.valueOf(1_000));
-        assertThatThrownBy(()->{
+        assertThatThrownBy(() -> {
             underTest.getFullRate(scoringData);
         }).isInstanceOf(RefusalException.class)
                 .hasMessageContaining("Requested Amount is more than 20 times your salary, loan refused");
     }
 
     @Test
-    void shouldThrowARefusalExceptionWhenAgeIsOver60OrLess20(){
+    void shouldThrowARefusalExceptionWhenAgeIsOver60OrLess20() {
 
-        assertThatThrownBy(()->{
-            scoringData.setBirthdate(LocalDate.of(1955,1,29));
+        assertThatThrownBy(() -> {
+            scoringData.setBirthdate(LocalDate.of(1955, 1, 29));
             underTest.getFullRate(scoringData);
         }).isInstanceOf(RefusalException.class)
                 .hasMessageContaining("Refused client does not meet the age bracket");
-        assertThatThrownBy(()->{
-            scoringData.setBirthdate(LocalDate.of(2004,1,29));
+        assertThatThrownBy(() -> {
+            scoringData.setBirthdate(LocalDate.of(2004, 1, 29));
             underTest.getFullRate(scoringData);
         }).isInstanceOf(RefusalException.class)
                 .hasMessageContaining("Refused client does not meet the age bracket");
     }
 
     @Test
-    void shouldThrowRefusalExceptionWhenExperienceIsInvalid(){
+    void shouldThrowRefusalExceptionWhenExperienceIsInvalid() {
         employment.setWorkExperienceTotal(10);
         employment.setWorkExperienceCurrent(2);
 
-        assertThatThrownBy(()->{
+        assertThatThrownBy(() -> {
             underTest.getFullRate(scoringData);
         }).isInstanceOf(RefusalException.class).hasMessageContaining("Invalid Work Experience loan refused");
     }
+
     @ParameterizedTest
-    @EnumSource(value = EmploymentStatus.class,names = {"BUSINESS_OWNER", "SELF_EMPLOYED"})
-    void shouldCalculateRateBaseOnEmploymentStatus(EmploymentStatus status){
+    @EnumSource(value = EmploymentStatus.class, names = {"BUSINESS_OWNER", "SELF_EMPLOYED"})
+    void shouldCalculateRateBaseOnEmploymentStatus(EmploymentStatus status) {
         employment.setEmploymentStatus(status);
         assertThat(underTest.getFullRate(scoringData))
                 .isNotNegative();
     }
+
     @ParameterizedTest
-    @EnumSource(value = Position.class,names = {"MID_MANAGER", "TOP_MANAGER"})
-    void shouldCalculateRateBaseOnPosition(Position position){
+    @EnumSource(value = Position.class, names = {"MID_MANAGER", "TOP_MANAGER"})
+    void shouldCalculateRateBaseOnPosition(Position position) {
         employment.setPosition(position);
         assertThat(underTest.getFullRate(scoringData)).isNotZero();
     }
+
     @ParameterizedTest
-    @EnumSource(value = MaritalStatus.class,names = {"MARRIED", "DIVORCED"})
-    void shouldCalculateRateBaseOnMaritalStatus(MaritalStatus maritalStatus){
+    @EnumSource(value = MaritalStatus.class, names = {"MARRIED", "DIVORCED"})
+    void shouldCalculateRateBaseOnMaritalStatus(MaritalStatus maritalStatus) {
         scoringData.setMaritalStatus(maritalStatus);
         assertThat(underTest.getFullRate(scoringData)).isNotNegative();
     }
 
     @ParameterizedTest
-    @EnumSource(value = Gender.class,names = {"MALE", "FEMALE"})
-    void shouldCalculateRateBaseOnGenderAndAgeBracket(Gender gender){
+    @EnumSource(value = Gender.class, names = {"MALE", "FEMALE"})
+    void shouldCalculateRateBaseOnGenderAndAgeBracket(Gender gender) {
         scoringData.setGender(gender);
-        scoringData.setBirthdate(LocalDate.of(1982,6,3));
+        scoringData.setBirthdate(LocalDate.of(1982, 6, 3));
         assertThat(underTest.getFullRate(scoringData)).isNotNegative();
     }
+
     @Test
-    void shouldCalculateRateBaseOnNumberOfDependents(){
+    void shouldCalculateRateBaseOnNumberOfDependents() {
         scoringData.setDependentAmount(3);
         assertThat(underTest.getFullRate(scoringData)).isNotNegative();
     }
