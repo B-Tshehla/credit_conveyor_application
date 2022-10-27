@@ -25,7 +25,6 @@ class ConveyorControllerTest {
     private int port;
     private String baseUrl = "http://localhost";
     private static RestTemplate restTemplate;
-
     @BeforeAll
     public static void init(){
         restTemplate = new RestTemplate();
@@ -55,6 +54,7 @@ class ConveyorControllerTest {
                 loanApplicationRequest,
                 List.class
         );
+        assert loanOfferList != null;
         assertThat(loanOfferList.size()).isEqualTo(4);
     }
 

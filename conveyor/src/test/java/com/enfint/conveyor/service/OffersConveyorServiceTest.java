@@ -2,30 +2,47 @@ package com.enfint.conveyor.service;
 
 import com.enfint.conveyor.dto.LoanApplicationRequestDTO;
 import com.enfint.conveyor.exception.RefusalException;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.mockito.Mockito;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
+import static org.mockito.Mockito.when;
 
-@SpringBootTest
+
 class OffersConveyorServiceTest {
-    OffersConveyorService underTest;
-    OfferCalculationService offerCalculationService;
-    LoanApplicationRequestDTO loanApplicationRequest;
+    private OffersConveyorService underTest;
+    private static OfferCalculationService offerCalculationService;
+    private LoanApplicationRequestDTO loanApplicationRequest;
 
+    @BeforeAll
+    static void beforeAll() {
+        offerCalculationService = Mockito.mock(OfferCalculationService.class);
+        when(offerCalculationService.getRate(true,true))
+                .thenReturn(BigDecimal.valueOf(6));
+        when(offerCalculationService.getRate(true,false))
+                .thenReturn(BigDecimal.valueOf(14));
+        when(offerCalculationService.getRate(false,true))
+                .thenReturn(BigDecimal.valueOf(16));
+        when(offerCalculationService.getRate(false,false))
+                .thenReturn(BigDecimal.valueOf(24));
+        when(offerCalculationService.getMonthlyPayment(6.0,10_000.00,12))
+                .thenReturn(BigDecimal.valueOf(860.67));
 
+        when(offerCalculationService.getFullAmount(BigDecimal.valueOf(860.67),12))
+                .thenReturn(BigDecimal.valueOf(10_328.04));
+    }
 
     @BeforeEach
     void setUp() {
-        offerCalculationService = new OfferCalculationService();
         underTest = new OffersConveyorService(offerCalculationService);
         loanApplicationRequest =
                 new LoanApplicationRequestDTO(
@@ -43,9 +60,9 @@ class OffersConveyorServiceTest {
 
     @Test
     void shouldReturnListOfFourLoanOffers() {
+
         assertThat(underTest.getLoanOfferDTOList(loanApplicationRequest).size()).isEqualTo(4);
     }
-
     @Test
     void shouldThrowARefusalException() {
         assertThatThrownBy(() -> {
@@ -80,7 +97,7 @@ class OffersConveyorServiceTest {
     @ParameterizedTest()
     @ValueSource(ints = {1, 4, 10, 15, 10, 20})
     void shouldAcceptAgeGreaterThan18(int year) {
-        loanApplicationRequest.setBirthdate(LocalDate.of(2003, 10, 25));
+        loanApplicationRequest.setBirthdate(LocalDate.of(2004, 10, 25));
         LocalDate actual = loanApplicationRequest.getBirthdate().minusYears(year);
         loanApplicationRequest.setBirthdate(actual);
         assertThat(underTest.getLoanOfferDTOList(loanApplicationRequest).size()).isEqualTo(4);
@@ -89,7 +106,7 @@ class OffersConveyorServiceTest {
     @ParameterizedTest()
     @ValueSource(ints = {1, 4, 10, 15, 10, 20})
     void shouldThrowRefusalExceptionWhenAgeLessThan18(int year) {
-        loanApplicationRequest.setBirthdate(LocalDate.of(2003, 10, 25));
+        loanApplicationRequest.setBirthdate(LocalDate.of(2004, 10, 25));
         LocalDate actual = loanApplicationRequest.getBirthdate().plusYears(year);
         loanApplicationRequest.setBirthdate(actual);
         assertThatThrownBy(() -> underTest.getLoanOfferDTOList(loanApplicationRequest))

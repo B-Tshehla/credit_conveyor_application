@@ -17,13 +17,10 @@ import java.util.regex.Pattern;
 
 @Service
 @Slf4j
-
+@RequiredArgsConstructor
 public class OffersConveyorService {
-    OfferCalculationService offerCalculationService;
+    private final OfferCalculationService offerCalculationService;
 
-    OffersConveyorService(OfferCalculationService offersConveyorService){
-        this.offerCalculationService = offersConveyorService;
-    }
 
     public List<LoanOfferDTO> getLoanOfferDTOList(LoanApplicationRequestDTO loanApplicationRequestDTO) {
         List<LoanOfferDTO> offersList = new ArrayList<>();

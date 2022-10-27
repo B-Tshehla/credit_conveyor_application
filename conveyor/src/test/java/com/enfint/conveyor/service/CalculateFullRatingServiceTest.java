@@ -7,9 +7,7 @@ import com.enfint.conveyor.enumModel.Gender;
 import com.enfint.conveyor.enumModel.MaritalStatus;
 import com.enfint.conveyor.enumModel.Position;
 import com.enfint.conveyor.exception.RefusalException;
-import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
@@ -20,7 +18,6 @@ import java.time.LocalDate;
 import static com.enfint.conveyor.enumModel.EmploymentStatus.*;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
-import static org.junit.jupiter.api.Assertions.*;
 
 class CalculateFullRatingServiceTest {
 
@@ -40,8 +37,8 @@ class CalculateFullRatingServiceTest {
                 15
         );
         scoringData = new ScoringDataDTO(
-                BigDecimal.valueOf(10000),
-                10,
+                BigDecimal.valueOf(10_000),
+                12,
                 "Boitumelo",
                 "Tshehla",
                 "Tumi",

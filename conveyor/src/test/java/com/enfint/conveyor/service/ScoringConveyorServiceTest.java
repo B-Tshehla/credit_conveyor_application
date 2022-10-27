@@ -5,10 +5,12 @@ import com.enfint.conveyor.dto.ScoringDataDTO;
 import com.enfint.conveyor.enumModel.Gender;
 import com.enfint.conveyor.enumModel.MaritalStatus;
 import com.enfint.conveyor.enumModel.Position;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.mockito.Mockito;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -16,20 +18,19 @@ import java.time.LocalDate;
 import static com.enfint.conveyor.enumModel.EmploymentStatus.EMPLOYED;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.when;
 
 class ScoringConveyorServiceTest {
-    ScoringDataDTO scoringData;
-    EmploymentDTO employment;
-    ScoringConveyorService underTest;
-    CalculateFullRatingService calculateFullRating;
-    OfferCalculationService offerCalculationService;
+    private ScoringDataDTO scoringData;
+    private ScoringConveyorService underTest;
+
 
     @BeforeEach
     void setUp() {
-        calculateFullRating = new CalculateFullRatingService();
-        offerCalculationService = new OfferCalculationService();
-        underTest = new ScoringConveyorService(calculateFullRating,offerCalculationService);
-        employment = new EmploymentDTO(
+        OfferCalculationService offerCalculationService = new OfferCalculationService();
+        CalculateFullRatingService calculateFullRating = new CalculateFullRatingService();
+        underTest = new ScoringConveyorService(calculateFullRating, offerCalculationService);
+        EmploymentDTO employment = new EmploymentDTO(
                 EMPLOYED,
                 "enfint",
                 BigDecimal.valueOf(8_000),

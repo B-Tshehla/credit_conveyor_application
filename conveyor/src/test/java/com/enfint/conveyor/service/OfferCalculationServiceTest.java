@@ -2,13 +2,12 @@ package com.enfint.conveyor.service;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
+
 
 import java.math.BigDecimal;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
-@SpringBootTest
 class OfferCalculationServiceTest {
     OfferCalculationService underTest;
 
@@ -37,8 +36,8 @@ class OfferCalculationServiceTest {
 
     @Test
     void shouldCheckTheWorstRate() {
-        BigDecimal expected = BigDecimal.valueOf(16);
-        assertThat(underTest.getRate(false, true)).isEqualTo(expected);
+        BigDecimal expected = BigDecimal.valueOf(24);
+        assertThat(underTest.getRate(false, false)).isEqualTo(expected);
     }
 
     @Test
