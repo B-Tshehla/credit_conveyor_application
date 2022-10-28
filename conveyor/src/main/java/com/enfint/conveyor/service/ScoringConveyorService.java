@@ -29,7 +29,7 @@ public class ScoringConveyorService {
         BigDecimal rate = offerCalculation.getRate(scoringDataDTO.getIsInsuranceEnabled(), scoringDataDTO.getIsSalaryClient());
         BigDecimal amount = scoringDataDTO.getAmount().setScale(2, RoundingMode.CEILING);
         Integer term = scoringDataDTO.getTerm();
-        BigDecimal monthlyPayment = offerCalculation.getMonthlyPayment(rate.doubleValue(), amount.doubleValue(), term);
+        BigDecimal monthlyPayment = offerCalculation.getMonthlyPayment(rate, amount, term);
         BigDecimal totalAmount = offerCalculation.getFullAmount(monthlyPayment, term);
 
         rate = rate.add(fullRatingService.getFullRate(scoringDataDTO));

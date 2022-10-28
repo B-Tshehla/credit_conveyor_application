@@ -9,7 +9,6 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 @ControllerAdvice
 public class RefusalHandler {
-
     @ExceptionHandler(value = {RefusalException.class})
     public ResponseEntity<Object> handleRefusalException(RefusalException e){
         Refusal refusal = new Refusal(

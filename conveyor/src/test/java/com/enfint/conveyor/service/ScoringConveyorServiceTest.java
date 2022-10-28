@@ -5,31 +5,37 @@ import com.enfint.conveyor.dto.ScoringDataDTO;
 import com.enfint.conveyor.enumModel.Gender;
 import com.enfint.conveyor.enumModel.MaritalStatus;
 import com.enfint.conveyor.enumModel.Position;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
-import org.mockito.Mockito;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 
 import static com.enfint.conveyor.enumModel.EmploymentStatus.EMPLOYED;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
 
+@ExtendWith(MockitoExtension.class)
 class ScoringConveyorServiceTest {
+    @Mock
+    private OfferCalculationService offerCalculationService;
+    @Mock
+    private CalculateFullRatingService calculateFullRating;
     private ScoringDataDTO scoringData;
+    @InjectMocks
     private ScoringConveyorService underTest;
+
 
 
     @BeforeEach
     void setUp() {
-        OfferCalculationService offerCalculationService = new OfferCalculationService();
-        CalculateFullRatingService calculateFullRating = new CalculateFullRatingService();
-        underTest = new ScoringConveyorService(calculateFullRating, offerCalculationService);
+
+        underTest = new ScoringConveyorService(calculateFullRating,offerCalculationService);
         EmploymentDTO employment = new EmploymentDTO(
                 EMPLOYED,
                 "enfint",
@@ -39,8 +45,8 @@ class ScoringConveyorServiceTest {
                 15
         );
         scoringData = new ScoringDataDTO(
-                BigDecimal.valueOf(10000),
-                10,
+                BigDecimal.valueOf(10_000),
+                12,
                 "Boitumelo",
                 "Tshehla",
                 "Tumi",
@@ -58,13 +64,19 @@ class ScoringConveyorServiceTest {
                 true);
     }
 
-    @ParameterizedTest
-    @ValueSource(ints = {10,24,35,48,120})
-    void shouldGetPaymentScheduleBasedOnTerm(int term) {
-
-        scoringData.setTerm(term);
+    @Test
+    public void shouldGetPaymentScheduleBasedOnTerm() {
+        when(offerCalculationService.getRate(true,true))
+                .thenReturn(BigDecimal.valueOf(6));
+        when(offerCalculationService.getMonthlyPayment(BigDecimal.valueOf(6),
+                BigDecimal.valueOf(10_000)
+                        .setScale(2, RoundingMode.CEILING),12))
+                        .thenReturn(BigDecimal.valueOf(860.67));
+        when(offerCalculationService.getFullAmount(BigDecimal.valueOf(860.67),12))
+                .thenReturn(BigDecimal.valueOf(10_328.04));
+        when(calculateFullRating.getFullRate(scoringData)).thenReturn(BigDecimal.valueOf(3));
         assertThat(underTest
                 .getCreditDTO(scoringData)
-                .getPaymentSchedule().size()).isEqualTo(term+1);
+                .getPaymentSchedule().size()).isEqualTo(13);
     }
 }

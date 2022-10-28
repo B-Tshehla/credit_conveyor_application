@@ -58,13 +58,13 @@ class CalculateFullRatingServiceTest {
 
 
     @Test
-    void shouldCalculateFullRate() {
+    public void shouldCalculateFullRate() {
         BigDecimal expect = BigDecimal.valueOf(3);
         assertThat(underTest.getFullRate(scoringData)).isEqualTo(expect);
     }
 
     @Test
-    void shouldThrowARefusalExceptionWhenUnEmployed() {
+    public void shouldThrowARefusalExceptionWhenUnEmployed() {
         employment.setEmploymentStatus(UNEMPLOYED);
         assertThatThrownBy(() -> {
             underTest.getFullRate(scoringData);
@@ -73,7 +73,7 @@ class CalculateFullRatingServiceTest {
     }
 
     @Test
-    void shouldThrowARefusalExceptionWhenAmountIs20TimesTheSalary() {
+    public void shouldThrowARefusalExceptionWhenAmountIs20TimesTheSalary() {
         scoringData.setAmount(BigDecimal.valueOf(100_000));
         employment.setSalary(BigDecimal.valueOf(1_000));
         assertThatThrownBy(() -> {
@@ -83,7 +83,7 @@ class CalculateFullRatingServiceTest {
     }
 
     @Test
-    void shouldThrowARefusalExceptionWhenAgeIsOver60OrLess20() {
+    public void shouldThrowARefusalExceptionWhenAgeIsOver60OrLess20() {
 
         assertThatThrownBy(() -> {
             scoringData.setBirthdate(LocalDate.of(1955, 1, 29));
@@ -98,7 +98,7 @@ class CalculateFullRatingServiceTest {
     }
 
     @Test
-    void shouldThrowRefusalExceptionWhenExperienceIsInvalid() {
+    public void shouldThrowRefusalExceptionWhenExperienceIsInvalid() {
         employment.setWorkExperienceTotal(10);
         employment.setWorkExperienceCurrent(2);
 
@@ -109,7 +109,7 @@ class CalculateFullRatingServiceTest {
 
     @ParameterizedTest
     @EnumSource(value = EmploymentStatus.class, names = {"BUSINESS_OWNER", "SELF_EMPLOYED"})
-    void shouldCalculateRateBaseOnEmploymentStatus(EmploymentStatus status) {
+    public void shouldCalculateRateBaseOnEmploymentStatus(EmploymentStatus status) {
         employment.setEmploymentStatus(status);
         assertThat(underTest.getFullRate(scoringData))
                 .isNotNegative();
@@ -117,28 +117,28 @@ class CalculateFullRatingServiceTest {
 
     @ParameterizedTest
     @EnumSource(value = Position.class, names = {"MID_MANAGER", "TOP_MANAGER"})
-    void shouldCalculateRateBaseOnPosition(Position position) {
+    public void shouldCalculateRateBaseOnPosition(Position position) {
         employment.setPosition(position);
         assertThat(underTest.getFullRate(scoringData)).isNotZero();
     }
 
     @ParameterizedTest
     @EnumSource(value = MaritalStatus.class, names = {"MARRIED", "DIVORCED"})
-    void shouldCalculateRateBaseOnMaritalStatus(MaritalStatus maritalStatus) {
+    public void shouldCalculateRateBaseOnMaritalStatus(MaritalStatus maritalStatus) {
         scoringData.setMaritalStatus(maritalStatus);
         assertThat(underTest.getFullRate(scoringData)).isNotNegative();
     }
 
     @ParameterizedTest
     @EnumSource(value = Gender.class, names = {"MALE", "FEMALE"})
-    void shouldCalculateRateBaseOnGenderAndAgeBracket(Gender gender) {
+    public void shouldCalculateRateBaseOnGenderAndAgeBracket(Gender gender) {
         scoringData.setGender(gender);
         scoringData.setBirthdate(LocalDate.of(1982, 6, 3));
         assertThat(underTest.getFullRate(scoringData)).isNotNegative();
     }
 
     @Test
-    void shouldCalculateRateBaseOnNumberOfDependents() {
+    public void shouldCalculateRateBaseOnNumberOfDependents() {
         scoringData.setDependentAmount(3);
         assertThat(underTest.getFullRate(scoringData)).isNotNegative();
     }

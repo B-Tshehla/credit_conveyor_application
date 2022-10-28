@@ -44,7 +44,7 @@ public class OffersConveyorService {
         BigDecimal requestedAmount = loanApplicationRequestDTO.getAmount();
         Integer term = loanApplicationRequestDTO.getTerm();
         BigDecimal rate = offerCalculationService.getRate(isInsuranceEnable, isSalaryClient);
-        BigDecimal monthlyPayment = offerCalculationService.getMonthlyPayment(rate.doubleValue(), requestedAmount.doubleValue(), term);
+        BigDecimal monthlyPayment = offerCalculationService.getMonthlyPayment(rate, requestedAmount, term);
         BigDecimal totalAmount = offerCalculationService.getFullAmount(monthlyPayment, term);
 
         loanOffer.setIsInsuranceEnabled(isInsuranceEnable);

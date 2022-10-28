@@ -4,7 +4,6 @@ package com.enfint.conveyor.service;
 import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.stereotype.Component;
-import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -32,8 +31,10 @@ public class OfferCalculationService {
         return rate;
     }
 
-    public BigDecimal getMonthlyPayment(Double rate, Double amount, Integer term) {
+    public BigDecimal getMonthlyPayment(BigDecimal rateB, BigDecimal amountB, Integer term) {
         log.info("************ Calculating Monthly Payment ***************");
+        double rate = rateB.doubleValue();
+        double amount = amountB.doubleValue();
         double numerator;
         double denominator;
         double monthlyPayment;

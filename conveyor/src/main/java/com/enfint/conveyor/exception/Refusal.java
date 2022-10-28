@@ -1,26 +1,15 @@
 package com.enfint.conveyor.exception;
 
-import lombok.RequiredArgsConstructor;
+import lombok.AllArgsConstructor;
+import lombok.Data;
 import org.springframework.http.HttpStatus;
 
 import java.time.ZonedDateTime;
 
-@RequiredArgsConstructor
+@Data
+@AllArgsConstructor
 public class Refusal {
-    private final String message;
-    private final HttpStatus httpStatus;
-    private final ZonedDateTime timestamp;
-
-
-    public String getMessage() {
-        return message;
-    }
-
-    public HttpStatus getHttpStatus() {
-        return httpStatus;
-    }
-
-    public ZonedDateTime getTimestamp() {
-        return timestamp;
-    }
+    private String message;
+    private HttpStatus httpStatus;
+    private ZonedDateTime timestamp;
 }

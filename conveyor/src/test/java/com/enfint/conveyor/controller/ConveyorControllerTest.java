@@ -17,6 +17,7 @@ import java.util.List;
 
 import static com.enfint.conveyor.enumModel.EmploymentStatus.EMPLOYED;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class ConveyorControllerTest {
@@ -35,7 +36,7 @@ class ConveyorControllerTest {
     }
 
     @Test
-    void shouldGetAListWithFourLoanOffers() {
+   public void shouldGetAListWithFourLoanOffers() {
 
         LoanApplicationRequestDTO loanApplicationRequest =
                 new LoanApplicationRequestDTO(
@@ -54,12 +55,12 @@ class ConveyorControllerTest {
                 loanApplicationRequest,
                 List.class
         );
-        assert loanOfferList != null;
+        assertNotNull(loanOfferList);
         assertThat(loanOfferList.size()).isEqualTo(4);
     }
 
     @Test
-    void shouldGetACreditDataTransferObject() {
+    public void shouldGetACreditDataTransferObject() {
         EmploymentDTO employment = new EmploymentDTO(
                 EMPLOYED,
                 "enfint",
@@ -91,7 +92,7 @@ class ConveyorControllerTest {
                 baseUrl.concat("/calculation"),
                 scoringData, CreditDTO.class);
 
-        assert credit != null;
+        assertNotNull(credit);
         assertThat(credit.getPaymentSchedule().size())
                 .isEqualTo(scoringData.getTerm()+1);
         assertThat(credit.getPsk()).isPositive();

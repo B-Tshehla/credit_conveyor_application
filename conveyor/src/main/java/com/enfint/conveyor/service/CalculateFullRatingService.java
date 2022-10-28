@@ -25,7 +25,6 @@ import static com.enfint.conveyor.enumModel.Position.TOP_MANAGER;
 import static java.math.BigDecimal.valueOf;
 
 @Service
-@NoArgsConstructor
 @Slf4j
 public class CalculateFullRatingService {
 
