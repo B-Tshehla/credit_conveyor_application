@@ -35,6 +35,4 @@ public class ConveyorController {
         log.info("Get credit scoringDataDTO {}", scoringDataDTO);
         return scoringConveyorService.getCreditDTO(scoringDataDTO);
     }
-
-
 }
