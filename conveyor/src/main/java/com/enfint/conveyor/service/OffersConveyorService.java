@@ -29,17 +29,17 @@ public class OffersConveyorService {
             throw new RefusalException("Pre-scoring failed loan application is null");
         }
         isPreScoring(loanApplicationRequestDTO);
-        offersList.add(getLoanOffer(loanApplicationRequestDTO, new LoanOfferDTO(), false, false));
-        offersList.add(getLoanOffer(loanApplicationRequestDTO, new LoanOfferDTO(), false, true));
-        offersList.add(getLoanOffer(loanApplicationRequestDTO, new LoanOfferDTO(), true, false));
-        offersList.add(getLoanOffer(loanApplicationRequestDTO, new LoanOfferDTO(), true, true));
+        offersList.add(getLoanOffer(loanApplicationRequestDTO,false, false));
+        offersList.add(getLoanOffer(loanApplicationRequestDTO,false, true));
+        offersList.add(getLoanOffer(loanApplicationRequestDTO, true, false));
+        offersList.add(getLoanOffer(loanApplicationRequestDTO, true, true));
 
         log.info("Pre-scoring passed {}", offersList);
 
         return offersList;
     }
 
-    private LoanOfferDTO getLoanOffer(LoanApplicationRequestDTO loanApplicationRequestDTO, LoanOfferDTO loanOffer, Boolean isInsuranceEnable, Boolean isSalaryClient) {
+    private LoanOfferDTO getLoanOffer(LoanApplicationRequestDTO loanApplicationRequestDTO, Boolean isInsuranceEnable, Boolean isSalaryClient) {
         log.info("************ Generating Loan Offer ***************");
         BigDecimal requestedAmount = loanApplicationRequestDTO.getAmount();
         Integer term = loanApplicationRequestDTO.getTerm();
@@ -47,13 +47,15 @@ public class OffersConveyorService {
         BigDecimal monthlyPayment = offerCalculationService.getMonthlyPayment(rate, requestedAmount, term);
         BigDecimal totalAmount = offerCalculationService.getFullAmount(monthlyPayment, term);
 
-        loanOffer.setIsInsuranceEnabled(isInsuranceEnable);
-        loanOffer.setIsSalaryClient(isSalaryClient);
-        loanOffer.setRequestedAmount(requestedAmount);
-        loanOffer.setTerm(term);
-        loanOffer.setTotalAmount(totalAmount);
-        loanOffer.setRate(rate);
-        loanOffer.setMonthlyPayment(monthlyPayment);
+        LoanOfferDTO loanOffer = LoanOfferDTO.builder()
+                .isInsuranceEnabled(isInsuranceEnable)
+                .isSalaryClient(isSalaryClient)
+                .requestedAmount(requestedAmount)
+                .term(term)
+                .totalAmount(totalAmount)
+                .rate(rate)
+                .monthlyPayment(monthlyPayment)
+                .build();
         log.info("creating loan offer {}", loanOffer);
         return loanOffer;
     }

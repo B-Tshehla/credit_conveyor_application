@@ -25,22 +25,22 @@ public class ScoringConveyorService {
 
     public CreditDTO getCreditDTO(ScoringDataDTO scoringDataDTO) {
         log.info("************ Generating Credit ***************");
-        CreditDTO creditDTO = new CreditDTO();
         BigDecimal rate = offerCalculation.getRate(scoringDataDTO.getIsInsuranceEnabled(), scoringDataDTO.getIsSalaryClient());
         BigDecimal amount = scoringDataDTO.getAmount().setScale(2, RoundingMode.CEILING);
         Integer term = scoringDataDTO.getTerm();
         BigDecimal monthlyPayment = offerCalculation.getMonthlyPayment(rate, amount, term);
         BigDecimal totalAmount = offerCalculation.getFullAmount(monthlyPayment, term);
-
         rate = rate.add(fullRatingService.getFullRate(scoringDataDTO));
-
-        creditDTO.setRate(rate);
-        creditDTO.setAmount(amount);
-        creditDTO.setTerm(term);
-        creditDTO.setIsInsuranceEnabled(scoringDataDTO.getIsInsuranceEnabled());
-        creditDTO.setIsSalaryClient(scoringDataDTO.getIsSalaryClient());
-        creditDTO.setMonthlyPayment(monthlyPayment);
-        creditDTO.setPsk(totalAmount);
+        CreditDTO creditDTO = CreditDTO
+                .builder()
+                .rate(rate)
+                .amount(amount)
+                .term(term)
+                .isInsuranceEnabled(scoringDataDTO.getIsInsuranceEnabled())
+                .isSalaryClient(scoringDataDTO.getIsSalaryClient())
+                .monthlyPayment(monthlyPayment)
+                .psk(totalAmount)
+                .build();
         creditDTO.setPaymentSchedule(getPaymentSchedule(creditDTO));
 
         return creditDTO;
@@ -61,7 +61,16 @@ public class ScoringConveyorService {
         BigDecimal remainingDebt = totalLoanAmount;
 
         List<PaymentScheduleElement> paymentScheduleList = new ArrayList<>();
-        paymentScheduleList.add(new PaymentScheduleElement(0, currentDate, totalPayment, interestPayment, BigDecimal.ZERO.setScale(2, RoundingMode.CEILING), remainingDebt));
+        paymentScheduleList.add(
+                 PaymentScheduleElement.builder()
+                         .number(0)
+                         .date(currentDate)
+                         .totalPayment(totalPayment)
+                         .interestPayment(interestPayment)
+                         .debtPayment(BigDecimal.ZERO.setScale(2, RoundingMode.CEILING))
+                         .remainingDebt(remainingDebt)
+                         .build()
+        );
         currentDate = currentDate.plusMonths(1);
         for (int x = 1; x <= term; x++) {
 
@@ -70,7 +79,17 @@ public class ScoringConveyorService {
             remainingDebt = remainingDebt.subtract(debtPayment);
             interestPayment = interestPayment.add(interestPaymentBase);
 
-            paymentScheduleList.add(new PaymentScheduleElement(x, currentDate, totalPayment.setScale(2, RoundingMode.CEILING), interestPayment.setScale(2, RoundingMode.CEILING), debtPayment.setScale(2, RoundingMode.CEILING), remainingDebt.setScale(2, RoundingMode.CEILING)));
+            paymentScheduleList.add(
+                     PaymentScheduleElement
+                             .builder()
+                             .number(x)
+                             .date(currentDate)
+                             .totalPayment(totalPayment.setScale(2, RoundingMode.CEILING))
+                             .interestPayment(interestPayment.setScale(2, RoundingMode.CEILING))
+                             .debtPayment(debtPayment.setScale(2, RoundingMode.CEILING))
+                             .remainingDebt(remainingDebt.setScale(2, RoundingMode.CEILING))
+                             .build()
+            );
         }
         return paymentScheduleList;
     }
